@@ -52,9 +52,14 @@ def test_help():
             os.path.dirname(os.getenv("KV_BENCH_TEST_PATH", "/dev/shm/pmemkv")),
             "fillrandom,readrandom",
         ),
+        (
+            "cmap",
+            os.getenv("KV_BENCH_TEST_PATH", "/dev/shm/pmemkv"),
+            "readrandom,fillrandom,readrandom",
+        ),
     ],
 )
-def test_json(engine, test_path, benchmarks):
+def test_json(engine, test_path, benchmarks, do_cleanup=True):
     """Basic integration test for run_benchmark.py. It runs full
     benchmarking process for arbitrarily chosen parameters.
     """
@@ -134,3 +139,13 @@ def test_json(engine, test_path, benchmarks):
         result = rb.main()
     except Exception as e:
         assert False, f"run-bench raised exception: {e}"
+
+    return result
+
+def test_write_read_separate_processes():
+    test_json("cmap", os.getenv("KV_BENCH_TEST_PATH", "/dev/shm/pmemkv"), "fillseq", False)
+    res = test_json("cmap", os.getenv("KV_BENCH_TEST_PATH", "/dev/shm/pmemkv"), "readseq")
+    extra_data = res[0]["results"][0]["extra_data"]
+    found = int(extra_data.split()[0][1:])
+    expected = int(extra_data.split()[2])
+    assert found == expected
