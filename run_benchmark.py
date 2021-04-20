@@ -330,7 +330,8 @@ This parameter sets configuration of benchmarking process. Input structure is sp
     for test_case in bench_params:
         logger.info(f"Running: {test_case}")
         benchmark.run(test_case["env"], test_case["params"])
-        benchmark.cleanup(test_case["params"])
+        if "cleanup" not in test_case or test_case["cleanup"] != 0:
+            benchmark.cleanup(test_case["params"])
         benchmark_results = benchmark.get_results()
 
         report = {}
